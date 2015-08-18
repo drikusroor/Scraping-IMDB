@@ -41,25 +41,85 @@ def GetMovieList(search_term):
 
     return movie_list
 
-def GetActorList(movie_id):
+def GetCastList(movie_id):
+    cast_list = {} #to assign roles to persons, a dictionary is used
     domain = 'http://www.imdb.com/'
     url_first = 'title/'
     url_middle = movie_id
     url_last = '/fullcredits?ref_=tt_cl_sm#cast'
     search_url = domain + url_first + url_middle + url_last
     print(search_url)
+    cast_info_html = GetHtml(search_url)
+    cast_info_soup = BeautifulSoup(cast_info_html, 'html.parser')
+
+    #gets actors in and stores their ids in a list
+    cast_list = []
+    actor_list_soup = cast_info_soup.find("table", class_="cast_list")
+    for row in actor_list_soup.find_all("tr"):
+        actor = {}
+        link = row.find_all("a")
+        #only extracts the link urls and texts from rows that actually contain links
+        if link != None:
+            if len(link) > 0:
+                link = link[1]
+                actor['url'] = link.get('href')
+                actor['id'] = actor['url'][6:15]
+                actor['name'] = link.span.string
+                actor_birth_dict = GetActorInformation(actor['id'])
+                print(actor_birth_dict)
+
+        cast_list.append(actor)
+
+    return cast_list
+
+
+def GetActorInformation(actor_id):
+    actor_birth_dict = {}
+    domain = 'http://www.imdb.com/'
+    url_first = 'name/'
+    url_middle = actor_id
+    url_last = ''
+
+    search_url = domain + url_first + url_middle + url_last
+    print(search_url)
     actor_info_html = GetHtml(search_url)
     actor_info_soup = BeautifulSoup(actor_info_html, 'html.parser')
-    return actor_info_soup
+    try:
+        actor_birth_soup = actor_info_soup.find_all("div", class_="txt-block")[1]
+    except IndexError:
+        actor_birth_soup = False
+        print("Oeps, geen geboorteinformatie beschikbaar!")
+    if actor_birth_soup:
+        #Checks whether there is a birth date, or throws exception
+        try:
 
-titanic_list = GetMovieList("daddy")
-titanic_url = titanic_list[0]
+            actor_birth_date = actor_birth_soup.time.find_all("a")[0:2]
+            actor_birth_dict["Birth Date: "] = actor_birth_date[0].string + ", " + actor_birth_date[1].string
+        except:
+            actor_birth_dict["Birth Date: "] = "Onbekend (nur)"
 
-for movie in titanic_list:
-    print(movie)
+        # Checks whether there is a birth place, or throws exception
+        try:
+            actor_birth_place_link = actor_birth_soup.find_all("a")[2]
+            # Checks whether the link above refers to birth place or not
+            if "birth_place" in str(actor_birth_place_link):
+                print("Geboorteplaats bekend!")
+                actor_birth_place = actor_birth_place_link.string
+                actor_birth_dict["Actor Birth Place: "] = actor_birth_place
+                actor_type = actor_birth_place[-3:]
 
-print(titanic_url['id'])
+                if actor_type != "USA":
+                    actor_type = "ROME"
+                actor_birth_dict["Rome or US: "] = actor_type
+            else:
+                actor_birth_dict["Actor Birth Place: "] = "Onbekend (geen land, maar jaar)"
+                actor_birth_dict["Rome or US: "] = "Onbekend (geen land, maar jaar)"
+        except:
+            actor_birth_dict["Actor Birth Place: "] = "Onbekend (nur)"
+            actor_birth_dict["Rome or US: "] = "Onbekend (nur)"
+        #print(actor_birth_dict)
+    if actor_birth_soup:
+        return actor_birth_dict
+    else:
+        return {"Birth Date: " : "Onbekend (soup)", "Actor Birth Place: " : "Onbekend (soup)", "Rome or US: ": "Onbekend (soup)"}
 
-soup = GetActorList(titanic_url['id'])
-
-print(soup.prettify())
