@@ -21,6 +21,7 @@ def GetMovieList(search_term):
     #url_middle = '/classement/bloc-classement-page/'
     url_last_optional = '&s=tt&ttype=ft&ref_=fn_ft'
     search_url = domain + url_first + search_term + url_last_optional
+    search_url = search_url.replace(' ', '+')
     movie_list_html = GetHtml(search_url)
     movie_list_soup = BeautifulSoup(movie_list_html, 'html.parser')
     print(search_url)
@@ -39,6 +40,9 @@ def GetMovieList(search_term):
             movie_meta['year'] = year[2:6]
             movie_list.append(movie_meta)
 
+    print("Aantal hits voor deze zoekterm: " + str(len(movie_list)))
+    if len(movie_list) >= 5: # Only looks for the first 5 or less results
+        movie_list = movie_list[0:5]
     return movie_list
 
 def GetCastList(movie_id):
@@ -55,19 +59,22 @@ def GetCastList(movie_id):
     #gets actors in and stores their ids in a list
     cast_list = []
     actor_list_soup = cast_info_soup.find("table", class_="cast_list")
-    for row in actor_list_soup.find_all("tr"):
-        actor = {}
-        link = row.find_all("a")
-        #only extracts the link urls and texts from rows that actually contain links
-        if link != None:
-            if len(link) > 0:
-                link = link[1]
-                actor['url'] = link.get('href')
-                actor['id'] = actor['url'][6:15]
-                actor['name'] = link.span.string
-                actor_birth_dict = GetActorInformation(actor['id'])
-                print(actor_birth_dict)
-
+    try:
+        for row in actor_list_soup.find_all("tr"):
+            actor = {}
+            link = row.find_all("a")
+            #only extracts the link urls and texts from rows that actually contain links
+            if link != None:
+                if len(link) > 0:
+                    link = link[1]
+                    actor['url'] = link.get('href')
+                    actor['id'] = actor['url'][6:15]
+                    actor['name'] = link.span.string
+                    actor_birth_dict = GetActorInformation(actor['id'])
+                    print(actor_birth_dict)
+    except:
+        actor = "Geen acteurs in deze film"
+        print(actor)
         cast_list.append(actor)
 
     return cast_list
@@ -122,4 +129,27 @@ def GetActorInformation(actor_id):
         return actor_birth_dict
     else:
         return {"Birth Date: " : "Onbekend (soup)", "Actor Birth Place: " : "Onbekend (soup)", "Rome or US: ": "Onbekend (soup)"}
+
+def GetAllInformation(search_term_list):
+
+    end_results = []
+
+    for search_term in search_term_list:
+        search_term_results = {}
+        search_results_list = GetMovieList(search_term)
+        print(search_results_list)
+        search_results_list = search_results_list[0:2] #only the first result
+
+        for search_result in search_results_list:
+            search_result_id = search_result['id']
+            print(search_result_id)
+            cast_list = GetCastList(search_result['id'])
+            search_term_results[search_result_id] = cast_list
+
+        end_results.append(search_term_results)
+
+    return end_results
+
+
+
 
