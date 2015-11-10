@@ -5,20 +5,7 @@ Created on 18 aug. 2015
 '''
 from moviesearchlist import *
 
-##titanic_list = GetMovieList("daddy")
-##titanic_url = titanic_list[0:5]
+# Create a list of movies of which you want to scrape all metadata from
+sample_list_of_movies = ['Apocalypse now', ' Matrix']
 
-##for movie in titanic_list:
-##    print(movie)
-
-##for film in titanic_url:
-##    print(film['id'])
-##    soup = GetCastList(film['id'])
-
-##example_id = "nm0567162"
-
-##example_actor = GetActorInformation(example_id)
-
-list_of_movies = ["Toy Story", "The Lion King", "Forest Gump"]
-
-GetAllInformation(list_of_movies)
+movies_information = GetAllInformation(sample_list_of_movies)
