@@ -80,6 +80,7 @@ def GetCastList(movie_id):
                     print("==========")
                     print(actor['name'])
                     actor_birth_dict = GetActorInformation(actor['id'])
+            cast_list.append(actor)
     except:
         actor = "No actors in this movie."
         cast_list.append(actor)
@@ -99,13 +100,13 @@ def GetActorInformation(actor_id):
         actor_birth_soup = actor_info_soup.find_all("div", class_="txt-block")[1]
     except IndexError:
         actor_birth_soup = False
-        print("Oops, Birth Date and Birth Place unknown!")
+        # print("Oops, Birth Date and Birth Place unknown!")
     if actor_birth_soup:
         # Checks whether there is a birth date, or throws exception
         try:
             actor_birth_date = actor_birth_soup.time.find_all("a")[0:2]
             actor_birth_dict["Birth Date: "] = actor_birth_date[0].string + ", " + actor_birth_date[1].string
-            print("Birth Date is known! > " + actor_birth_dict["Birth Date: "])
+            # print("Birth Date is known! > " + actor_birth_dict["Birth Date: "])
         except:
             actor_birth_dict["Birth Date: "] = "Unknown (exception)"
             e = sys.exc_info()[0]
@@ -116,12 +117,12 @@ def GetActorInformation(actor_id):
             actor_birth_place_link = actor_birth_soup.find_all("a")[2]
             # Checks whether the link above refers to birth place or not
             if "birth_place" in str(actor_birth_place_link):
-                print("Birth place is known! > " + actor_birth_place_link.string)
+                # print("Birth place is known! > " + actor_birth_place_link.string)
                 actor_birth_place = actor_birth_place_link.string
                 actor_birth_dict["Actor Birth Place: "] = actor_birth_place
             else:
                 actor_birth_dict["Actor Birth Place: "] = "Unknown (no place, no date)"
-                print("Birth place is unknown! :'(")
+                # print("Birth place is unknown! :'(")
         except:
             actor_birth_dict["Actor Birth Place: "] = "Unknown (exception)"
             e = sys.exc_info()[0]
@@ -150,6 +151,7 @@ def GetAllInformation(search_term_list, amount_results):
             search_result_id = search_result['id']
             print("Search Result ID: " + search_result_id)
             cast_list = GetCastList(search_result['id'])
+            print("Cast List is: " + str(cast_list))
             search_term_results[search_result_id] = cast_list
 
         end_results.append(search_term_results)
