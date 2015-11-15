@@ -20,7 +20,6 @@ def GetHtml(url):
     return r.data
 
 def GetSoup(url):
-    print("Url is: " + url)
     html_data = GetHtml(url)
     soup_data = BeautifulSoup(html_data, 'html.parser')
     return soup_data
@@ -77,9 +76,14 @@ def GetCastList(movie_id):
                     actor['url'] = link.get('href')
                     actor['id'] = actor['url'][6:15]
                     actor['name'] = link.span.string
+                    print(actor['name'] + ' - ' + actor['id'])
                     print("==========")
-                    print(actor['name'])
                     actor_birth_dict = GetActorInformation(actor['id'])
+                    try:
+                        actor['date_of_birth'] = actor_birth_dict['date_of_birth']
+                        actor['place_of_birth'] = actor_birth_dict['place_of_birth']
+                    except:
+                        print("Not possible to add birth information to actor")
             cast_list.append(actor)
     except:
         actor = "No actors in this movie."
@@ -105,10 +109,10 @@ def GetActorInformation(actor_id):
         # Checks whether there is a birth date, or throws exception
         try:
             actor_birth_date = actor_birth_soup.time.find_all("a")[0:2]
-            actor_birth_dict["Birth Date: "] = actor_birth_date[0].string + ", " + actor_birth_date[1].string
+            actor_birth_dict["date_of_birth"] = actor_birth_date[0].string + ", " + actor_birth_date[1].string
             # print("Birth Date is known! > " + actor_birth_dict["Birth Date: "])
         except:
-            actor_birth_dict["Birth Date: "] = "Unknown (exception)"
+            actor_birth_dict["date_of_birth"] = "Unknown (exception)"
             e = sys.exc_info()[0]
             write_to_page( "<p>Error: %s</p>" % e )
 
@@ -119,12 +123,12 @@ def GetActorInformation(actor_id):
             if "birth_place" in str(actor_birth_place_link):
                 # print("Birth place is known! > " + actor_birth_place_link.string)
                 actor_birth_place = actor_birth_place_link.string
-                actor_birth_dict["Actor Birth Place: "] = actor_birth_place
+                actor_birth_dict["place_of_birth"] = actor_birth_place
             else:
-                actor_birth_dict["Actor Birth Place: "] = "Unknown (no place, no date)"
+                actor_birth_dict["place_of_birth"] = "Unknown (no place, no date)"
                 # print("Birth place is unknown! :'(")
         except:
-            actor_birth_dict["Actor Birth Place: "] = "Unknown (exception)"
+            actor_birth_dict["place_of_birth"] = "Unknown (exception)"
             e = sys.exc_info()[0]
             write_to_page( "<p>Error: %s</p>" % e )
 
